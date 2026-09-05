@@ -34,7 +34,7 @@ def get_recent_alerts(db: Session = Depends(get_db)):
             "action_type": a.event.action_type,
             "risk_score": a.risk_score,
             "action_taken": a.action_taken,
-            "timestamp": a.created_at,
+            "timestamp": a.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if a.created_at else datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
             "explanations": a.explanation
         })
     return alerts
