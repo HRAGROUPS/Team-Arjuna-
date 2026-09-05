@@ -13,6 +13,7 @@ const API_URL = `${BASE_URL}/api/v1/admin/alerts`;
 export default function AdminDashboard() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState("alice");
 
   const fetchAlerts = async () => {
     setLoading(true);
@@ -67,10 +68,24 @@ export default function AdminDashboard() {
         
         {/* Trust Graph Section */}
         <section>
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-400" /> Identity Graph (Alice)
-            </h2>
-            <TrustGraph />
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-400" /> Identity Graph ({selectedUser})
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[var(--color-text-muted)] font-medium">Select Entity:</span>
+                <select 
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  className="bg-[var(--color-surface)] border border-[var(--color-border)] text-white text-xs font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer transition-all"
+                >
+                  <option value="alice">Alice (Standard User)</option>
+                  <option value="bob">Bob (Bypassed User)</option>
+                  <option value="admin">Admin (System Overseer)</option>
+                </select>
+              </div>
+            </div>
+            <TrustGraph username={selectedUser} />
         </section>
 
         {/* Real-Time Alerts Section */}

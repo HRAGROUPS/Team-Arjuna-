@@ -8,9 +8,11 @@ import dynamic from "next/dynamic";
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const API_URL = `${BASE_URL}/api/v1/graph/alice`;
+interface TrustGraphProps {
+  username?: string;
+}
 
-export default function TrustGraph() {
+export default function TrustGraph({ username = "alice" }: TrustGraphProps) {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
@@ -18,7 +20,7 @@ export default function TrustGraph() {
   useEffect(() => {
     const fetchGraph = async () => {
       try {
-        const response = await axios.get(API_URL);
+        const response = await axios.get(`${BASE_URL}/api/v1/graph/${username}`);
         setGraphData(response.data);
       } catch (error) {
         console.error("Failed to fetch graph data", error);
@@ -36,7 +38,7 @@ export default function TrustGraph() {
     }
 
     return () => clearInterval(interval);
-  }, []);
+  }, [username]);
 
   return (
     <div ref={containerRef} className="w-full h-[400px] bg-[#0B0E14] border border-[var(--color-border)] rounded-xl overflow-hidden relative">
