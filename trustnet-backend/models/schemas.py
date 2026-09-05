@@ -10,6 +10,7 @@ class LoginRequest(BaseModel):
     browser: str
     ip_address: str
     location: str
+    timestamp: str = None # Optional ISO timestamp for simulation
 
 class LoginResponse(BaseModel):
     token: Optional[str] = None

@@ -26,13 +26,16 @@ export default function Home() {
       os: "macOS",
       browser: "Chrome",
       ip_address: "192.168.1.100",
-      location: "New York, USA"
+      location: "New York, USA",
+      timestamp: undefined as string | undefined
     };
 
     if (scenario === "anomaly") {
-      // Alice logging in from a new IP in California
-      payload.ip_address = "203.0.113.10";
-      payload.location = "San Francisco, USA";
+      // Alice logging in at 3 AM (highly unusual time for her)
+      const date = new Date();
+      date.setHours(3, 15, 0, 0); // 3:15 AM
+      
+      payload.timestamp = date.toISOString();
     } else if (scenario === "attack") {
       // Hacker trying to log in as Alice with a totally unrecognized device and IP
       payload.device_fingerprint = "fp_hacker_kali_001";
@@ -98,9 +101,9 @@ export default function Home() {
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <AlertTriangle className={clsx("w-4 h-4", scenario === "anomaly" ? "text-amber-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 2: Anomaly</span>
+                    <span className="font-semibold text-white">Scenario 2: Anomaly (ML Demo)</span>
                   </div>
-                  <p className="text-xs text-gray-400">Alice logging in from known Mac, but new location.</p>
+                  <p className="text-xs text-gray-400">Alice logging in at 3 AM (Unusual Time).</p>
                 </button>
 
                 <button

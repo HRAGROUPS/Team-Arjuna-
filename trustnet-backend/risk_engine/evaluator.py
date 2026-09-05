@@ -1,12 +1,13 @@
 from models.database import SessionLocal, UserDevice, Session, Event
 from sqlalchemy import desc
 from datetime import datetime
+from risk_engine.ml_model import BehaviouralModel
 
 class RiskEvaluator:
     def __init__(self, db_session):
         self.db = db_session
 
-    def evaluate_login(self, user_id: int, device_fingerprint: str, ip_address: str, location: str) -> dict:
+    def evaluate_login(self, user_id: int, device_fingerprint: str, ip_address: str, location: str, simulation_timestamp: str = None) -> dict:
         score = 0
         explanations = []
 
@@ -54,14 +55,33 @@ class RiskEvaluator:
             # First time logging in (or no history)
             pass
 
+        # 3. ML Behavioural Anomaly Detection (Isolation Forest)
+        # We pass the current datetime (or simulated timestamp) for the ML model to extract hour/day features
+        ml_model = BehaviouralModel(self.db)
+        if simulation_timestamp:
+            # Strip timezone to match the database's naive datetimes
+            eval_time = datetime.fromisoformat(simulation_timestamp.replace("Z", "+00:00")).replace(tzinfo=None)
+        else:
+            eval_time = datetime.now()
+            
+        ml_result = ml_model.predict_anomaly(user_id, eval_time)
+        
+        if ml_result["is_anomaly"]:
+            score += ml_result["score_penalty"]
+            explanations.append(ml_result["explanation"])
+
         # Calculate final action based on score
         # Ensure score stays between 0 and 100
         final_score = max(0, min(100, score))
         
+        # DEMO HARDENING: If ML model catches an anomaly, guarantee at least a CHALLENGE
+        if ml_result["is_anomaly"] and final_score < 40:
+            final_score = 50
+
         action = "allow"
-        if final_score > 70:
+        if final_score >= 70:
             action = "block"
-        elif final_score > 30:
+        elif final_score >= 30:
             action = "challenge"
 
         return {

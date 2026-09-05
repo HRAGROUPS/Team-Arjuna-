@@ -28,7 +28,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         user_id=user.id, 
         device_fingerprint=request.device_fingerprint, 
         ip_address=request.ip_address, 
-        location=request.location
+        location=request.location,
+        simulation_timestamp=request.timestamp
     )
 
     action = risk_result["action_taken"]
