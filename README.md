@@ -24,8 +24,7 @@ Traditional Identity and Access Management (IAM) systems suffer from a fatal fla
 ### 1. Interactive 2D Identity Graph & Entity Selector
 Dynamic force-directed network graph visualizing user entities, registered hardware devices (trusted/suspicious), and IP nodes. Features a live **Select Entity** dropdown to inspect any user profile in real time.
 
-![TrustNet Identity Graph](./assets/images/identity_graph.png)
-
+![TrustNet Secure Login Portal](./assets/images/secure_login.png)
 ---
 
 ### 2. Real-Time Risk Intel & Explainable AI (xAI) Drivers
@@ -37,8 +36,8 @@ Live SOC risk feed tracking authentication events with automated decisions (`ALL
 
 ### 3. Secure Zero-Trust Authentication Portal
 Minimalist client authentication portal capturing hardware fingerprinting and typing biometrics, providing instant visual feedback on blocked or challenged attempts.
+![TrustNet Identity Graph](./assets/images/identity_graph.png)
 
-![TrustNet Secure Login Portal](./assets/images/secure_login.png)
 
 ---
 
