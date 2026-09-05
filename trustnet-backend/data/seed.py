@@ -70,7 +70,7 @@ def seed_database():
             user_id=alice.id,
             device_id=alice_laptop.id,
             ip_address="192.168.1.100",
-            location="New York, USA",
+            location="United States",
             started_at=login_time
         )
         db.add(session)
@@ -81,7 +81,7 @@ def seed_database():
             user_id=alice.id,
             session_id=session.id,
             action_type="login",
-            payload={"ip": "192.168.1.100", "location": "New York, USA", "method": "password"},
+            payload={"ip": "192.168.1.100", "location": "United States", "method": "password"},
             timestamp=login_time
         )
         db.add(event)
