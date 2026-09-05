@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Shield, Search, AlertCircle, Activity, User, Monitor, MapPin, ExternalLink, RefreshCw, ShieldAlert, CheckCircle, AlertTriangle, BarChart2 } from "lucide-react";
+import { Shield, Search, AlertCircle, Activity, User, Monitor, MapPin, ExternalLink, RefreshCw, ShieldAlert, CheckCircle, AlertTriangle, BarChart2, Lock, KeyRound, Unlock } from "lucide-react";
 import axios from "axios";
 import clsx from "clsx";
 import { format } from "date-fns";
@@ -17,6 +17,20 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState<"all" | "block" | "challenge" | "allow">("all");
 
+  // Admin Access Guard State
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
+  const [adminPin, setAdminPin] = useState("");
+  const [pinError, setPinError] = useState("");
+
+  useEffect(() => {
+    // Check if previously authorized in session
+    const role = sessionStorage.getItem("trustnet_role");
+    const authStatus = sessionStorage.getItem("trustnet_admin_auth");
+    if (role === "admin" || authStatus === "true") {
+      setIsAuthorized(true);
+    }
+  }, []);
+
   const fetchAlerts = async () => {
     setLoading(true);
     try {
@@ -30,10 +44,28 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchAlerts();
-    const interval = setInterval(fetchAlerts, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    if (isAuthorized) {
+      fetchAlerts();
+      const interval = setInterval(fetchAlerts, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthorized]);
+
+  const handleAdminPinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPin === "1234" || adminPin.toLowerCase() === "admin") {
+      sessionStorage.setItem("trustnet_admin_auth", "true");
+      setIsAuthorized(true);
+      setPinError("");
+    } else {
+      setPinError("Invalid Admin PIN. Enter 1234 or click Demo Access below.");
+    }
+  };
+
+  const handleDemoBypass = () => {
+    sessionStorage.setItem("trustnet_admin_auth", "true");
+    setIsAuthorized(true);
+  };
 
   // Compute Summary Analytics Metrics
   const stats = useMemo(() => {
@@ -57,6 +89,62 @@ export default function AdminDashboard() {
       return matchesSearch && matchesFilter;
     });
   }, [alerts, searchQuery, actionFilter]);
+
+  // If not authorized yet, show sleek SOC Restricted Access Guard
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-[calc(100vh-65px)] bg-[#0B0E14] text-white flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="w-full max-w-md bg-[#151A23] border border-[#2A3441] rounded-2xl p-6 sm:p-8 shadow-2xl relative z-10 text-center backdrop-blur-xl">
+          <div className="w-16 h-16 bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/10">
+            <Lock className="w-8 h-8 text-blue-400" />
+          </div>
+
+          <h2 className="text-xl font-bold text-white tracking-tight">Security Operations Center</h2>
+          <p className="text-xs text-gray-400 mt-1 mb-6">Restricted Access — Admin Credentials Required</p>
+
+          <form onSubmit={handleAdminPinSubmit} className="space-y-4 mb-4">
+            <div className="space-y-1 text-left">
+              <label className="text-xs font-semibold text-gray-300 ml-1">Admin Passcode / PIN</label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="password"
+                  value={adminPin}
+                  onChange={(e) => setAdminPin(e.target.value)}
+                  placeholder="Enter PIN (Default: 1234)"
+                  className="w-full bg-[#0B0E14] border border-[#2A3441] rounded-xl py-2.5 pl-9 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            {pinError && <p className="text-xs text-red-400 font-medium">{pinError}</p>}
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/25 cursor-pointer text-sm"
+            >
+              Authenticate Admin Session
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-[#2A3441]">
+            <p className="text-[11px] text-gray-400 mb-3">Hackathon Demo Access:</p>
+            <button
+              type="button"
+              onClick={handleDemoBypass}
+              className="w-full bg-[#1F2633] hover:bg-[#2A3441] border border-[#2A3441] text-gray-200 font-semibold py-2 rounded-xl transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
+            >
+              <Unlock className="w-4 h-4 text-emerald-400" />
+              <span>⚡ Unlock SOC Console (Demo Mode)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0E14] text-white flex flex-col p-4 sm:p-6 lg:p-8">
@@ -164,7 +252,7 @@ export default function AdminDashboard() {
                     key={filter}
                     onClick={() => setActionFilter(filter)}
                     className={clsx(
-                      "px-3 py-1 rounded-lg font-semibold capitalize transition-all",
+                      "px-3 py-1 rounded-lg font-semibold capitalize transition-all cursor-pointer",
                       actionFilter === filter ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" : "text-gray-400 hover:text-white"
                     )}
                   >
