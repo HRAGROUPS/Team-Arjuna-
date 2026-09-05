@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Shield, Search, AlertCircle, Activity, User, Monitor, MapPin, ExternalLink, RefreshCw, ShieldAlert, CheckCircle, AlertTriangle, BarChart2, Lock, KeyRound, Unlock } from "lucide-react";
+import { Shield, Search, AlertCircle, Activity, User, Monitor, MapPin, RefreshCw, ShieldAlert, CheckCircle, AlertTriangle, BarChart2, Lock, KeyRound, Unlock, Bot, Sparkles, Lightbulb } from "lucide-react";
 import axios from "axios";
 import clsx from "clsx";
 import { format } from "date-fns";
@@ -9,9 +9,11 @@ import TrustGraph from "../components/TrustGraph";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const API_URL = `${BASE_URL}/api/v1/admin/alerts`;
+const AI_SUMMARY_URL = `${BASE_URL}/api/v1/admin/ai-summary`;
 
 export default function AdminDashboard() {
   const [alerts, setAlerts] = useState<any[]>([]);
+  const [aiSummary, setAiSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState("alice");
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,7 +25,6 @@ export default function AdminDashboard() {
   const [pinError, setPinError] = useState("");
 
   useEffect(() => {
-    // Check if previously authorized in session
     const role = sessionStorage.getItem("trustnet_role");
     const authStatus = sessionStorage.getItem("trustnet_admin_auth");
     if (role === "admin" || authStatus === "true") {
@@ -34,10 +35,14 @@ export default function AdminDashboard() {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(API_URL);
-      setAlerts(response.data);
+      const [alertsRes, aiRes] = await Promise.all([
+        axios.get(API_URL),
+        axios.get(AI_SUMMARY_URL).catch(() => ({ data: null }))
+      ]);
+      setAlerts(alertsRes.data);
+      if (aiRes.data) setAiSummary(aiRes.data);
     } catch (error) {
-      console.error("Failed to fetch alerts", error);
+      console.error("Failed to fetch alerts or AI summary", error);
     } finally {
       setLoading(false);
     }
@@ -210,6 +215,41 @@ export default function AdminDashboard() {
             <div className="text-[11px] text-gray-400 mt-1">High Severity Interceptions</div>
           </div>
         </div>
+
+        {/* AI Security Investigation Copilot Panel */}
+        {aiSummary && (
+          <section className="bg-gradient-to-r from-[#151A23] via-[#1A202C] to-[#151A23] border border-blue-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-blue-500/20 border border-blue-500/40 rounded-2xl shrink-0 mt-0.5">
+                <Bot className="w-6 h-6 text-blue-400" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-400" /> AI Security Investigation Copilot
+                    </span>
+                    <span className={clsx(
+                      "px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border",
+                      aiSummary.threat_level === "HIGH" ? "bg-red-500/20 text-red-400 border-red-500/40" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                    )}>
+                      Threat Level: {aiSummary.threat_level}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-200 leading-relaxed">
+                  {aiSummary.summary}
+                </p>
+
+                <div className="flex items-center gap-2 pt-1 text-xs text-blue-300 font-medium">
+                  <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span><strong>AI Actionable Recommendation:</strong> {aiSummary.recommendation}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Trust Graph Section */}
         <section className="bg-[#151A23] border border-[#2A3441] rounded-2xl p-5 shadow-xl">
