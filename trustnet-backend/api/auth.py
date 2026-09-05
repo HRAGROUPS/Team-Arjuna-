@@ -56,7 +56,8 @@ def login(request_data: LoginRequest, http_request: Request, db: Session = Depen
     )
 
     # DEMO/ADMIN BYPASS: The admin account must always be able to log in to present the dashboard!
-    if user.username == "admin":
+    # Bob is also bypassed so you can demonstrate a "Trusted User" successful login!
+    if user.username in ["admin", "bob"]:
         risk_result = {
             "risk_score": 0,
             "explanation": [{"signal": "Admin Override", "weight": "0"}],
