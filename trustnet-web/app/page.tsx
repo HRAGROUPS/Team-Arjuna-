@@ -1,195 +1,159 @@
 "use client";
 
-import { useState } from "react";
-import { Shield, Smartphone, Globe, Clock, AlertTriangle, CheckCircle, ShieldAlert } from "lucide-react";
+import { useState, useEffect } from "react";
+import fpPromise from "@fingerprintjs/fingerprintjs";
 import axios from "axios";
+import { Shield, Lock, User, ArrowRight, Activity } from "lucide-react";
 import clsx from "clsx";
+import { useRouter } from "next/navigation";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const API_URL = `${BASE_URL}/api/v1/auth/login`;
-
-type Scenario = "baseline" | "anomaly" | "attack";
-
-export default function Home() {
+export default function RealLogin() {
+  const [username, setUsername] = useState("alice");
+  const [password, setPassword] = useState("password123");
   const [loading, setLoading] = useState(false);
-  const [scenario, setScenario] = useState<Scenario>("baseline");
-  const [result, setResult] = useState<any>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: string; text: string } | null>(null);
+  const [fingerprint, setFingerprint] = useState<string>("");
+  const router = useRouter();
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setResult(null);
-
-    // Prepare payload based on scenario
-    let payload = {
-      username: "alice",
-      password: "password123",
-      device_fingerprint: "fp_alice_macbook_pro_2023",
-      os: "macOS",
-      browser: "Chrome",
-      ip_address: "192.168.1.100",
-      location: "New York, USA",
-      timestamp: undefined as string | undefined
+  useEffect(() => {
+    // Generate real-world device fingerprint on mount
+    const initFingerprint = async () => {
+      const fp = await fpPromise.load();
+      const result = await fp.get();
+      setFingerprint(result.visitorId);
     };
+    initFingerprint();
+  }, []);
 
-    if (scenario === "anomaly") {
-      // Alice logging in at 3 AM (highly unusual time for her)
-      const date = new Date();
-      date.setHours(3, 15, 0, 0); // 3:15 AM
-      
-      payload.timestamp = date.toISOString();
-    } else if (scenario === "attack") {
-      // Hacker trying to log in as Alice with a totally unrecognized device and IP
-      payload.device_fingerprint = "fp_hacker_kali_001";
-      payload.os = "Linux";
-      payload.browser = "Firefox";
-      payload.ip_address = "45.22.12.99";
-      payload.location = "St. Petersburg, Russia";
-    }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatusMsg(null);
+
+    // Extract basic browser info
+    const os = navigator.platform;
+    const browser = navigator.userAgent;
 
     try {
-      const response = await axios.post(API_URL, payload);
-      setResult(response.data);
-    } catch (error: any) {
-      if (error.response) {
-        setResult(error.response.data);
+      const payload = {
+        username,
+        password,
+        device_fingerprint: fingerprint,
+        os,
+        browser,
+        // Notice: We are NOT sending IP or Location here anymore!
+        // The backend will extract the real IP securely from the HTTP connection
+        // and do a live Geolocation lookup.
+      };
+
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await axios.post(`${BASE_URL}/api/v1/auth/login`, payload, {
+        headers: { "Bypass-Tunnel-Reminder": "true" }
+      });
+      const data = res.data;
+
+      if (data.action === "allow") {
+        setStatusMsg({ type: "success", text: "Login Successful! Redirecting..." });
+        setTimeout(() => {
+            router.push("/admin");
+        }, 1500);
+      } else if (data.action === "challenge") {
+        setStatusMsg({ type: "warning", text: `Challenge Triggered (Score: ${data.risk_score}). Additional verification required.` });
       } else {
-        setResult({ action: "error", message: "Network Error" });
+        setStatusMsg({ type: "error", text: `Blocked (Score: ${data.risk_score}). Access Denied.` });
       }
+
+    } catch (err: any) {
+      console.error(err);
+      setStatusMsg({ type: "error", text: "Invalid credentials or network error." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-[var(--color-background)]">
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Left Side: Login Simulator */}
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-400"></div>
-          
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Shield className="w-6 h-6 text-blue-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">TrustNet Simulator</h1>
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6 relative overflow-hidden">
+      
+      {/* Background Decorators */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-8 relative z-10 shadow-2xl">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center justify-center mb-4">
+            <Shield className="w-8 h-8 text-blue-400" />
           </div>
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--color-text-muted)]">Select Demo Scenario</label>
-              <div className="grid grid-cols-1 gap-2">
-                <button
-                  onClick={() => setScenario("baseline")}
-                  className={clsx(
-                    "p-4 rounded-xl border text-left transition-all",
-                    scenario === "baseline" ? "border-emerald-500/50 bg-emerald-500/10" : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle className={clsx("w-4 h-4", scenario === "baseline" ? "text-emerald-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 1: Baseline</span>
-                  </div>
-                  <p className="text-xs text-gray-400">Alice logging in from known Mac & IP.</p>
-                </button>
-                
-                <button
-                  onClick={() => setScenario("anomaly")}
-                  className={clsx(
-                    "p-4 rounded-xl border text-left transition-all",
-                    scenario === "anomaly" ? "border-amber-500/50 bg-amber-500/10" : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <AlertTriangle className={clsx("w-4 h-4", scenario === "anomaly" ? "text-amber-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 2: Anomaly (ML Demo)</span>
-                  </div>
-                  <p className="text-xs text-gray-400">Alice logging in at 3 AM (Unusual Time).</p>
-                </button>
-
-                <button
-                  onClick={() => setScenario("attack")}
-                  className={clsx(
-                    "p-4 rounded-xl border text-left transition-all",
-                    scenario === "attack" ? "border-red-500/50 bg-red-500/10" : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <ShieldAlert className={clsx("w-4 h-4", scenario === "attack" ? "text-red-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 3: Attack (ATO)</span>
-                  </div>
-                  <p className="text-xs text-gray-400">Hacker using unknown device from Russia.</p>
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                "Simulate Login Event"
-              )}
-            </button>
-          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Secure Login</h1>
+          <p className="text-sm text-gray-400 text-center">
+            Zero-Trust identity verification powered by continuous risk evaluation.
+          </p>
         </div>
 
-        {/* Right Side: Results & Intelligence */}
-        <div className="bg-[#0F131C] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl relative">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-semibold text-gray-300 flex items-center gap-2">
-              <Globe className="w-5 h-5" /> Live Engine Output
-            </h2>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300 ml-1">Username</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-[#0B0E14] border border-[var(--color-border)] rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                required
+              />
+            </div>
           </div>
 
-          {!result ? (
-            <div className="h-64 flex items-center justify-center flex-col gap-3 text-[var(--color-text-muted)] border-2 border-dashed border-[var(--color-border)] rounded-xl">
-              <Clock className="w-8 h-8 opacity-50" />
-              <p>Awaiting event ingestion...</p>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#0B0E14] border border-[var(--color-border)] rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                required
+              />
             </div>
-          ) : (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              
-              <div className="flex items-center justify-between p-6 rounded-xl border bg-[var(--color-surface)] border-[var(--color-border)]">
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Decision</p>
-                  <h3 className={clsx(
-                    "text-2xl font-bold uppercase tracking-wider",
-                    result.action === "allow" && "text-emerald-400",
-                    result.action === "challenge" && "text-amber-400",
-                    result.action === "block" && "text-red-500"
-                  )}>
-                    {result.action}
-                  </h3>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-400 mb-1">Risk Score</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className={clsx(
-                      "text-4xl font-bold",
-                      result.risk_score < 30 && "text-emerald-400",
-                      result.risk_score >= 30 && result.risk_score < 70 && "text-amber-400",
-                      result.risk_score >= 70 && "text-red-500",
-                    )}>
-                      {result.risk_score ?? "--"}
-                    </span>
-                    <span className="text-gray-500">/ 100</span>
-                  </div>
-                </div>
-              </div>
+          </div>
 
-              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <p className="text-blue-300 text-sm">{result.message || result.detail}</p>
-              </div>
-
+          {statusMsg && (
+            <div className={clsx(
+              "p-4 rounded-xl text-sm border flex items-start gap-2",
+              statusMsg.type === "success" && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+              statusMsg.type === "warning" && "bg-amber-500/10 border-amber-500/20 text-amber-400",
+              statusMsg.type === "error" && "bg-red-500/10 border-red-500/20 text-red-400"
+            )}>
+              <Activity className="w-5 h-5 shrink-0" />
+              <span>{statusMsg.text}</span>
             </div>
           )}
-        </div>
 
+          <button
+            type="submit"
+            disabled={loading || !fingerprint}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2"><Activity className="w-5 h-5 animate-spin" /> Verifying Identity...</span>
+            ) : (
+              <span className="flex items-center gap-2">Sign In <ArrowRight className="w-5 h-5" /></span>
+            )}
+          </button>
+        </form>
+
+        <div className="mt-6 border-t border-[var(--color-border)] pt-6">
+           <div className="bg-[#0B0E14] border border-[var(--color-border)] rounded-lg p-3 text-xs text-gray-500 font-mono">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                Live Security Context
+              </div>
+              <div>Device Hash: {fingerprint ? fingerprint.substring(0, 16) + "..." : "Scanning Hardware..."}</div>
+              <div className="text-gray-600 mt-1">IP & Geolocation will be securely extracted server-side via Zero-Trust architecture.</div>
+           </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
