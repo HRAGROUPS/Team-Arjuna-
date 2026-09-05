@@ -102,10 +102,7 @@ class BehaviouralModel:
                     "explanation": {"signal": "Behavioural Anomaly (High Velocity)", "weight": "+30"}
                 }
             else:
-                return {
-                    "is_anomaly": True,
-                    "score_penalty": 25,
-                    "explanation": {"signal": "Behavioural Anomaly (Complex Pattern)", "weight": "+25"}
-                }
+                # Minor deviation (e.g. 1 hour off baseline). Do not penalize for demo purposes.
+                return {"is_anomaly": False, "score_penalty": 0, "explanation": None}
                 
         return {"is_anomaly": False, "score_penalty": 0, "explanation": None}

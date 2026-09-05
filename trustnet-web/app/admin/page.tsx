@@ -172,6 +172,7 @@ export default function AdminDashboard() {
 
             </div>
           ))}
+        </div>
         </section>
       </main>
     </div>

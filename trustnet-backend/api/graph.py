@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 
 router = APIRouter()
 
-@router.get("/graph/{username}")
+@router.get("/{username}")
 def get_trust_graph(username: str, db: Session = Depends(get_db)):
     """Generate a Node/Link graph representing the user's identity footprint."""
     user = db.query(User).filter(User.username == username).first()
