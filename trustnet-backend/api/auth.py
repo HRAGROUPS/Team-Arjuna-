@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from datetime import timedelta
 import json
+import requests
 
 from models.database import get_db, User, Device, UserDevice, Session as DbSession, Event, RiskAssessment
 from models.schemas import LoginRequest, LoginResponse
@@ -11,25 +12,47 @@ from risk_engine.evaluator import RiskEvaluator
 router = APIRouter()
 
 @router.post("/login", response_model=LoginResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+def login(request_data: LoginRequest, http_request: Request, db: Session = Depends(get_db)):
     # 1. Verify Identity (Authentication)
-    user = db.query(User).filter(User.username == request.username).first()
-    if not user or not verify_password(request.password, user.hashed_password):
+    user = db.query(User).filter(User.username == request_data.username).first()
+    if not user or not verify_password(request_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # REAL-WORLD UPGRADE: Extract actual IP if not simulated
+    ip_address = request_data.ip_address
+    if not ip_address:
+        # Get real IP (fall back to localhost if running locally)
+        ip_address = http_request.client.host if http_request.client else "127.0.0.1"
+
+    # REAL-WORLD UPGRADE: Live Geolocation Lookup
+    location = request_data.location
+    if not location:
+        if ip_address == "127.0.0.1" or ip_address == "localhost" or ip_address == "::1":
+            location = "Local Network"
+        else:
+            try:
+                # Use a free live API for Geolocation
+                geo_resp = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=2).json()
+                if geo_resp.get("status") == "success":
+                    location = f"{geo_resp.get('city')}, {geo_resp.get('country')}"
+                else:
+                    location = "Unknown Location"
+            except:
+                location = "Unknown Location"
+
     # 2. CONTINUOUS DIGITAL TRUST EVALUATION (Risk Engine)
     # MUST be called BEFORE we insert the new device/session into the database!
     evaluator = RiskEvaluator(db)
     risk_result = evaluator.evaluate_login(
         user_id=user.id, 
-        device_fingerprint=request.device_fingerprint, 
-        ip_address=request.ip_address, 
-        location=request.location,
-        simulation_timestamp=request.timestamp
+        device_fingerprint=request_data.device_fingerprint, 
+        ip_address=ip_address, 
+        location=location,
+        simulation_timestamp=request_data.timestamp
     )
 
     action = risk_result["action_taken"]
@@ -37,10 +60,10 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     # 3. Track / Verify Device ONLY IF NOT BLOCKED
     session_id = None
     if action != "block":
-        device = db.query(Device).filter(Device.fingerprint == request.device_fingerprint).first()
+        device = db.query(Device).filter(Device.fingerprint == request_data.device_fingerprint).first()
         if not device:
             # New device unseen by system entirely
-            device = Device(fingerprint=request.device_fingerprint, os=request.os, browser=request.browser)
+            device = Device(fingerprint=request_data.device_fingerprint, os=request_data.os, browser=request_data.browser)
             db.add(device)
             db.commit()
             db.refresh(device)
@@ -56,8 +79,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         session = DbSession(
             user_id=user.id,
             device_id=device.id,
-            ip_address=request.ip_address,
-            location=request.location
+            ip_address=ip_address,
+            location=location
         )
         db.add(session)
         db.commit()
@@ -69,7 +92,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         user_id=user.id,
         session_id=session_id,
         action_type="login",
-        payload={"ip": request.ip_address, "location": request.location, "device": request.device_fingerprint}
+        payload={"ip": ip_address, "location": location, "device": request_data.device_fingerprint}
     )
     db.add(event)
     db.commit()

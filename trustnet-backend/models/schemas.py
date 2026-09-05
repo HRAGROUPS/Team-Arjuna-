@@ -8,9 +8,9 @@ class LoginRequest(BaseModel):
     device_fingerprint: str
     os: str
     browser: str
-    ip_address: str
-    location: str
-    timestamp: str = None # Optional ISO timestamp for simulation
+    ip_address: Optional[str] = None
+    location: Optional[str] = None
+    timestamp: Optional[str] = None # Optional ISO timestamp for simulation
 
 class LoginResponse(BaseModel):
     token: Optional[str] = None
