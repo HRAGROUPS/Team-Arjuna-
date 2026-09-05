@@ -21,31 +21,24 @@ Traditional Identity and Access Management (IAM) systems suffer from a fatal fla
 
 ## 📸 Platform Screenshots
 
-### 1. Security Operations Center (SOC) Console & xAI Drivers
-Real-time risk audit feed displaying granular risk scores, automated decisions (`ALLOW`, `CHALLENGE`, `BLOCK`), and human-readable Explainable AI penalty drivers.
+### 1. Interactive 2D Identity Graph & Entity Selector
+Dynamic force-directed network graph visualizing user entities, registered hardware devices (trusted/suspicious), and IP nodes. Features a live **Select Entity** dropdown to inspect any user profile in real time.
 
-![TrustNet SOC Dashboard](./assets/images/soc_dashboard.png)
-
----
-
-### 2. 2D Interactive Identity Graph
-Force-directed relationship network visualizing connections between user entities, registered hardware devices, trust levels, and IP addresses.
-
-![TrustNet Identity Graph](./assets/images/trust_graph.png)
+![TrustNet Identity Graph](./assets/images/identity_graph.png)
 
 ---
 
-### 3. Real-Time Risk Intelligence Feed
-Live stream of access events with status indicators, filtering options, and instant automated response metrics.
+### 2. Real-Time Risk Intel & Explainable AI (xAI) Drivers
+Live SOC risk feed tracking authentication events with automated decisions (`ALLOW`, `CHALLENGE`, `BLOCK`) and transparent signal weighting (`+40 Unrecognized Device`, `+20 New IP`, `+30 New Geo`, `+50 Impossible Travel Velocity`, `+40 Compromised Credential`).
 
-![TrustNet Admin Console](./assets/images/admin_console.png)
+![TrustNet Real-Time Risk Intel Feed](./assets/images/realtime_risk_intel.png)
 
 ---
 
-### 4. Secure Authentication Portal
-Minimalist Zero-Trust authentication screen capturing keystroke dynamics (typing biometrics) and browser fingerprinting seamlessly.
+### 3. Secure Zero-Trust Authentication Portal
+Minimalist client authentication portal capturing hardware fingerprinting and typing biometrics, providing instant visual feedback on blocked or challenged attempts.
 
-![TrustNet Login Portal](./assets/images/login_screen.png)
+![TrustNet Secure Login Portal](./assets/images/secure_login.png)
 
 ---
 
@@ -66,7 +59,7 @@ Minimalist Zero-Trust authentication screen capturing keystroke dynamics (typing
 
 ```mermaid
 graph TD
-    Client[📱 Web / Mobile Client] -->|Login Request + Typing Biometrics + Fingerprint| Gateway[⚡ FastAPI Backend]
+    Client[📱 Web Client] -->|Login Request + Typing Biometrics + Fingerprint| Gateway[⚡ FastAPI Backend]
     
     subgraph "TrustNet Engine"
         Gateway --> Auth[🔐 Auth Controller]
@@ -152,11 +145,10 @@ TrustNet utilizes an **Isolation Forest** unsupervised learning model (`scikit-l
 ```text
 Team-Arjuna-/
 ├── assets/
-│   └── images/              # Platform screenshots for documentation
-│       ├── soc_dashboard.png
-│       ├── trust_graph.png
-│       ├── admin_console.png
-│       └── login_screen.png
+│   └── images/              # Live application screenshots
+│       ├── identity_graph.png
+│       ├── realtime_risk_intel.png
+│       └── secure_login.png
 ├── trustnet-backend/        # FastAPI Risk Engine & Service API
 │   ├── api/                 # Endpoint routers (auth, admin, graph)
 │   ├── core/                # JWT & password security utilities
