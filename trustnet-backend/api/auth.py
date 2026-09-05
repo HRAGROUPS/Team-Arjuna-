@@ -55,6 +55,14 @@ def login(request_data: LoginRequest, http_request: Request, db: Session = Depen
         simulation_timestamp=request_data.timestamp
     )
 
+    # DEMO/ADMIN BYPASS: The admin account must always be able to log in to present the dashboard!
+    if user.username == "admin":
+        risk_result = {
+            "risk_score": 0,
+            "explanation": [{"signal": "Admin Override", "weight": "0"}],
+            "action_taken": "allow"
+        }
+    
     action = risk_result["action_taken"]
 
     # 3. Track / Verify Device ONLY IF NOT BLOCKED
