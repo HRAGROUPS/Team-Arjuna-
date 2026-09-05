@@ -5,6 +5,7 @@ import { Shield, Search, AlertCircle, Activity, User, Monitor, MapPin, ExternalL
 import axios from "axios";
 import clsx from "clsx";
 import { format } from "date-fns";
+import TrustGraph from "../components/TrustGraph";
 
 const API_URL = "http://localhost:8000/api/v1/admin/alerts";
 
@@ -61,18 +62,29 @@ export default function AdminDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Real-Time Risk Intel</h2>
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input 
-              type="text" 
-              placeholder="Search user, IP, or event ID..." 
-              className="pl-9 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 w-64 transition-all"
-            />
-          </div>
-        </div>
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-8">
+        
+        {/* Trust Graph Section */}
+        <section>
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-400" /> Identity Graph (Alice)
+            </h2>
+            <TrustGraph />
+        </section>
+
+        {/* Real-Time Alerts Section */}
+        <section>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">Real-Time Risk Intel</h2>
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <input 
+                  type="text" 
+                  placeholder="Search user, IP, or event ID..." 
+                  className="pl-9 pr-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 w-64 transition-all"
+                />
+              </div>
+            </div>
 
         <div className="grid grid-cols-1 gap-4">
           {alerts.length === 0 && !loading && (
@@ -160,7 +172,7 @@ export default function AdminDashboard() {
 
             </div>
           ))}
-        </div>
+        </section>
       </main>
     </div>
   );
