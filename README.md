@@ -11,6 +11,14 @@
 
 ---
 
+## 🌐 Live Production Links
+
+- **🚀 Live Authentication Portal:** [https://team-arjuna-eyrn.onrender.com/](https://team-arjuna-eyrn.onrender.com/)
+- **📊 Live SOC Operations Console:** [https://team-arjuna-eyrn.onrender.com/admin](https://team-arjuna-eyrn.onrender.com/admin)
+- **🎮 Live Scenario Testing Simulator:** [https://team-arjuna-eyrn.onrender.com/simulator](https://team-arjuna-eyrn.onrender.com/simulator)
+
+---
+
 ## 📌 Executive Summary
 
 Traditional Identity and Access Management (IAM) systems suffer from a fatal flaw: **binary static authentication**. Once a user enters a correct password, the system grants total access regardless of hardware anomalies, physical impossibility, or breach intelligence.
@@ -58,11 +66,11 @@ Minimalist client authentication portal capturing hardware fingerprinting and ty
 
 ```mermaid
 graph TD
-    Client["📱 Web Client"] -->|"Login Request + Biometrics + Fingerprint"| Gateway["⚡ FastAPI Backend"]
+    Client["📱 Web Client"] -->|"Login Request + Typing Biometrics + Fingerprint"| Gateway["⚡ FastAPI Backend"]
     
     subgraph "TrustNet Engine"
         Gateway --> Auth["🔐 Auth Controller"]
-        Auth --> HIBP["🔍 Dark Web Breach Check (HIBP API)"]
+        Auth --> HIBP["🔍 Dark Web Breach Check HIBP API"]
         Auth --> Evaluator["🛡️ Risk Evaluator Engine"]
         
         Evaluator --> FP["💻 Hardware Device Binding"]
@@ -216,14 +224,14 @@ npm run dev
 
 | Route | Purpose | Description |
 | :--- | :--- | :--- |
-| `http://localhost:3000/` | **Client Login** | Test real login with live typing biometrics & fingerprinting |
-| `http://localhost:3000/admin` | **SOC Console** | Monitor real-time risk alerts and interact with the 2D Identity Graph |
-| `http://localhost:3000/simulator` | **Scenario Simulator** | Test pre-configured Baseline, ML Anomaly (3 AM), and Attack scenarios |
+| `https://team-arjuna-eyrn.onrender.com/` | **Client Login** | Test real login with live typing biometrics & fingerprinting |
+| `https://team-arjuna-eyrn.onrender.com/admin` | **SOC Console** | Monitor real-time risk alerts and interact with the 2D Identity Graph |
+| `https://team-arjuna-eyrn.onrender.com/simulator` | **Scenario Simulator** | Test pre-configured Baseline, ML Anomaly (3 AM), and Attack scenarios |
 
 ### Recommended Demo Scenarios
 
 1. **Test Bot Automation / Copy-Paste:**
-   - Go to `http://localhost:3000/`.
+   - Go to `https://team-arjuna-eyrn.onrender.com/`.
    - Copy the password `password123` and **paste** it directly into the password box (`Ctrl+V`).
    - Submit login. The system catches the 0ms typing speed and triggers `Bot Automation (+50)`.
 
