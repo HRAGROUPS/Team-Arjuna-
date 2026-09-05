@@ -54,71 +54,8 @@ def seed_database():
     db.add(UserDevice(user_id=bob.id, device_id=bob_desktop.id, trust_level="trusted"))
     db.commit()
 
-    print("Generating Historical Events (Normal Behavior)...")
-    # Generate 30 days of normal login history for Alice
-    # Alice logs in around 9 AM (+- 2 hours) from New York
-    base_date = datetime.utcnow() - timedelta(days=30)
-    
-    for day in range(30):
-        # Alice Morning Login
-        login_hour = random.randint(8, 10)
-        login_minute = random.randint(0, 59)
-        login_time = base_date + timedelta(days=day, hours=login_hour, minutes=login_minute)
-        
-        # Create Session
-        session = Session(
-            user_id=alice.id,
-            device_id=alice_laptop.id,
-            ip_address="192.168.1.100",
-            location="United States",
-            started_at=login_time
-        )
-        db.add(session)
-        db.commit()
-
-        # Create Login Event
-        event = Event(
-            user_id=alice.id,
-            session_id=session.id,
-            action_type="login",
-            payload={"ip": "192.168.1.100", "location": "United States", "method": "password"},
-            timestamp=login_time
-        )
-        db.add(event)
-        db.commit()
-
-        # Risk Assessment (Low Risk)
-        risk = RiskAssessment(
-            event_id=event.id,
-            risk_score=random.uniform(2.0, 10.0),
-            explanation=[{"signal": "Known Device", "weight": "-10"}, {"signal": "Known IP", "weight": "-10"}],
-            action_taken="allow",
-            created_at=login_time
-        )
-        db.add(risk)
-        db.commit()
-
-    print("Generating Suspicious Past Event...")
-    # 5 days ago, Alice had a suspicious login from a new IP but same device
-    suspicious_time = base_date + timedelta(days=25, hours=2, minutes=30)
-    session_susp = Session(user_id=alice.id, device_id=alice_laptop.id, ip_address="203.0.113.5", location="Los Angeles, USA", started_at=suspicious_time)
-    db.add(session_susp)
-    db.commit()
-
-    event_susp = Event(user_id=alice.id, session_id=session_susp.id, action_type="login", payload={"ip": "203.0.113.5", "location": "Los Angeles, USA"}, timestamp=suspicious_time)
-    db.add(event_susp)
-    db.commit()
-
-    risk_susp = RiskAssessment(
-        event_id=event_susp.id,
-        risk_score=65.0,
-        explanation=[{"signal": "Unusual Time", "weight": "+30"}, {"signal": "New Location", "weight": "+35"}],
-        action_taken="challenge",
-        created_at=suspicious_time
-    )
-    db.add(risk_susp)
-    db.commit()
-
+    # No historic or suspicious events are seeded for Alice.
+    # This clean state lets you demonstrate the effect of the typing‑biometrics rule without other penalties.
     print("Database seeding completed successfully.")
 
 if __name__ == "__main__":
