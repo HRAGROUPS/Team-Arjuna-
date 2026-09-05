@@ -32,21 +32,46 @@ class RiskEvaluator:
             explanations.append({"signal": "Unverified Device History", "weight": "+10"})
 
         # 2. IP / Location Check
-        # Check last 5 sessions for this user
+        # Check last 5 sessions AND events for this user
         recent_sessions = self.db.query(Session).filter(
             Session.user_id == user_id
         ).order_by(desc(Session.started_at)).limit(5).all()
 
-        if recent_sessions:
-            known_ips = [s.ip_address for s in recent_sessions]
-            known_locations = [s.location for s in recent_sessions]
+        recent_events = self.db.query(Event).filter(
+            Event.user_id == user_id,
+            Event.action_type == "login"
+        ).order_by(desc(Event.timestamp)).limit(5).all()
 
-            if ip_address not in known_ips:
+        known_ips = set()
+        known_locations = set()
+        last_login_location = None
+        last_login_time = None
+
+        for s in recent_sessions:
+            if s.ip_address: known_ips.add(s.ip_address)
+            if s.location: known_locations.add(s.location)
+
+        for e in recent_events:
+            payload = e.payload if isinstance(e.payload, dict) else {}
+            e_ip = payload.get("ip")
+            e_loc = payload.get("location")
+            if e_ip: known_ips.add(e_ip)
+            if e_loc: known_locations.add(e_loc)
+
+        if recent_events:
+            last_e = recent_events[0]
+            payload = last_e.payload if isinstance(last_e.payload, dict) else {}
+            last_login_location = payload.get("location")
+            last_login_time = last_e.timestamp
+        elif recent_sessions:
+            last_s = recent_sessions[0]
+            last_login_location = last_s.location
+            last_login_time = last_s.started_at
+
+        if known_ips or known_locations:
+            if ip_address and ip_address not in known_ips:
                 score += 20
                 explanations.append({"signal": "New IP Address", "weight": "+20"})
-            else:
-                score += 0
-                explanations.append({"signal": "Known IP Address", "weight": "-5"})
 
             if location and location not in known_locations:
                 score += 30
@@ -59,15 +84,11 @@ class RiskEvaluator:
             eval_time = datetime.now()
 
         # IMPOSSIBLE TRAVEL CALCULATION
-        if recent_sessions and location:
-            last_session = recent_sessions[0]
-            if last_session.location != location:
-                time_diff_hours = (eval_time - last_session.started_at).total_seconds() / 3600.0
-                if time_diff_hours < 4.0:
-                    score += 50
-                    explanations.append({"signal": "Impossible Travel Velocity", "weight": "+50"})
-            # First time logging in (or no history)
-            pass
+        if last_login_location and location and last_login_location != location and last_login_time:
+            time_diff_hours = (eval_time - last_login_time).total_seconds() / 3600.0
+            if time_diff_hours < 4.0:
+                score += 50
+                explanations.append({"signal": "Impossible Travel Velocity", "weight": "+50"})
 
         # 3. ML Behavioural Anomaly Detection (Isolation Forest)
         ml_model = BehaviouralModel(self.db)
