@@ -19,6 +19,11 @@ class LoginResponse(BaseModel):
     risk_score: float
     message: str
 
+class VerifyMFARequest(BaseModel):
+    username: str
+    code: str
+    device_fingerprint: Optional[str] = None
+
 class EventResponse(BaseModel):
     id: int
     user_id: int

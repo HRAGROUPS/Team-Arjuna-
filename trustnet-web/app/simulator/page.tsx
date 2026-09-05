@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Smartphone, Globe, Clock, AlertTriangle, CheckCircle, ShieldAlert } from "lucide-react";
+import { Shield, Globe, Clock, AlertTriangle, CheckCircle, ShieldAlert, Cpu, Sparkles } from "lucide-react";
 import axios from "axios";
 import clsx from "clsx";
 
@@ -19,7 +19,6 @@ export default function Home() {
     setLoading(true);
     setResult(null);
 
-    // Prepare payload based on scenario
     let payload = {
       username: "alice",
       password: "password123",
@@ -32,13 +31,12 @@ export default function Home() {
     };
 
     if (scenario === "anomaly") {
-      // Alice logging in at 3 AM (highly unusual time for her)
+      // Alice logging in at 3 AM (unusual time for ML model)
       const date = new Date();
-      date.setHours(3, 15, 0, 0); // 3:15 AM
-      
+      date.setHours(3, 15, 0, 0);
       payload.timestamp = date.toISOString();
     } else if (scenario === "attack") {
-      // Hacker trying to log in as Alice with a totally unrecognized device and IP
+      // Hacker trying to log in as Alice with unrecognized device & IP
       payload.device_fingerprint = "fp_hacker_kali_001";
       payload.os = "Linux";
       payload.browser = "Firefox";
@@ -53,7 +51,7 @@ export default function Home() {
       if (error.response) {
         setResult(error.response.data);
       } else {
-        setResult({ action: "error", message: "Network Error" });
+        setResult({ action: "error", message: "Network Error: Could not connect to backend engine." });
       }
     } finally {
       setLoading(false);
@@ -61,132 +59,153 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-[var(--color-background)]">
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Left Side: Login Simulator */}
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-400"></div>
-          
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Shield className="w-6 h-6 text-blue-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">TrustNet Simulator</h1>
-          </div>
+    <main className="min-h-[calc(100vh-65px)] bg-[#0B0E14] text-white flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+      
+      {/* Background Glows */}
+      <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--color-text-muted)]">Select Demo Scenario</label>
-              <div className="grid grid-cols-1 gap-2">
+      <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+        
+        {/* Left Side: Scenario Controls */}
+        <div className="bg-[#151A23] border border-[#2A3441] rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2.5 bg-blue-500/20 border border-blue-500/30 rounded-xl">
+                <Cpu className="w-6 h-6 text-blue-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">TrustNet Scenario Simulator</h1>
+                <p className="text-xs text-gray-400">Interactive Security Intelligence Sandbox</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-300">Select Test Scenario</label>
+              
+              <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={() => setScenario("baseline")}
                   className={clsx(
-                    "p-4 rounded-xl border text-left transition-all",
-                    scenario === "baseline" ? "border-emerald-500/50 bg-emerald-500/10" : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    "p-4 rounded-xl border text-left transition-all cursor-pointer",
+                    scenario === "baseline" ? "border-emerald-500/60 bg-emerald-500/10 shadow-lg shadow-emerald-500/10" : "border-[#2A3441] bg-[#0B0E14] hover:border-gray-500"
                   )}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <CheckCircle className={clsx("w-4 h-4", scenario === "baseline" ? "text-emerald-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 1: Baseline</span>
+                    <span className="font-bold text-white text-sm">Scenario 1: Baseline Authentication</span>
                   </div>
-                  <p className="text-xs text-gray-400">Alice logging in from known Mac & IP.</p>
+                  <p className="text-xs text-gray-400 leading-relaxed ml-6">Alice logging in from her registered MacBook Pro & known IP address.</p>
                 </button>
-                
+
                 <button
                   onClick={() => setScenario("anomaly")}
                   className={clsx(
-                    "p-4 rounded-xl border text-left transition-all",
-                    scenario === "anomaly" ? "border-amber-500/50 bg-amber-500/10" : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    "p-4 rounded-xl border text-left transition-all cursor-pointer",
+                    scenario === "anomaly" ? "border-amber-500/60 bg-amber-500/10 shadow-lg shadow-amber-500/10" : "border-[#2A3441] bg-[#0B0E14] hover:border-gray-500"
                   )}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <AlertTriangle className={clsx("w-4 h-4", scenario === "anomaly" ? "text-amber-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 2: Anomaly (ML Demo)</span>
+                    <span className="font-bold text-white text-sm">Scenario 2: Temporal Anomaly (ML Model)</span>
                   </div>
-                  <p className="text-xs text-gray-400">Alice logging in at 3 AM (Unusual Time).</p>
+                  <p className="text-xs text-gray-400 leading-relaxed ml-6">Alice attempting login at 3:15 AM (Unusual temporal deviation for Isolation Forest).</p>
                 </button>
 
                 <button
                   onClick={() => setScenario("attack")}
                   className={clsx(
-                    "p-4 rounded-xl border text-left transition-all",
-                    scenario === "attack" ? "border-red-500/50 bg-red-500/10" : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    "p-4 rounded-xl border text-left transition-all cursor-pointer",
+                    scenario === "attack" ? "border-red-500/60 bg-red-500/10 shadow-lg shadow-red-500/10" : "border-[#2A3441] bg-[#0B0E14] hover:border-gray-500"
                   )}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <ShieldAlert className={clsx("w-4 h-4", scenario === "attack" ? "text-red-400" : "text-gray-400")} />
-                    <span className="font-semibold text-white">Scenario 3: Attack (ATO)</span>
+                    <span className="font-bold text-white text-sm">Scenario 3: Account Takeover (ATO Attack)</span>
                   </div>
-                  <p className="text-xs text-gray-400">Hacker using unknown device from Russia.</p>
+                  <p className="text-xs text-gray-400 leading-relaxed ml-6">External adversary using unrecognized Linux Kali device & Russian IP node.</p>
                 </button>
               </div>
             </div>
-
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                "Simulate Login Event"
-              )}
-            </button>
           </div>
+
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 mt-6 cursor-pointer shadow-lg shadow-blue-600/25 text-sm"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Running Risk Engine Telemetry...</span>
+              </div>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> Simulate Authentication Event
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Right Side: Results & Intelligence */}
-        <div className="bg-[#0F131C] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl relative">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-semibold text-gray-300 flex items-center gap-2">
-              <Globe className="w-5 h-5" /> Live Engine Output
-            </h2>
-          </div>
-
-          {!result ? (
-            <div className="h-64 flex items-center justify-center flex-col gap-3 text-[var(--color-text-muted)] border-2 border-dashed border-[var(--color-border)] rounded-xl">
-              <Clock className="w-8 h-8 opacity-50" />
-              <p>Awaiting event ingestion...</p>
+        {/* Right Side: Results & Intelligence Output */}
+        <div className="bg-[#151A23] border border-[#2A3441] rounded-2xl p-6 sm:p-8 shadow-2xl relative flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#2A3441]">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Globe className="w-5 h-5 text-blue-400" /> Live Risk Telemetry Output
+              </h2>
+              <span className="text-xs font-mono text-gray-400">Status: {result ? "Evaluated" : "Idle"}</span>
             </div>
-          ) : (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              
-              <div className="flex items-center justify-between p-6 rounded-xl border bg-[var(--color-surface)] border-[var(--color-border)]">
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Decision</p>
-                  <h3 className={clsx(
-                    "text-2xl font-bold uppercase tracking-wider",
-                    result.action === "allow" && "text-emerald-400",
-                    result.action === "challenge" && "text-amber-400",
-                    result.action === "block" && "text-red-500"
-                  )}>
-                    {result.action}
-                  </h3>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-400 mb-1">Risk Score</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className={clsx(
-                      "text-4xl font-bold",
-                      result.risk_score < 30 && "text-emerald-400",
-                      result.risk_score >= 30 && result.risk_score < 70 && "text-amber-400",
-                      result.risk_score >= 70 && "text-red-500",
+
+            {!result ? (
+              <div className="h-64 flex items-center justify-center flex-col gap-3 text-gray-400 border-2 border-dashed border-[#2A3441] rounded-2xl bg-[#0B0E14]">
+                <Clock className="w-8 h-8 text-gray-500 opacity-60" />
+                <p className="text-xs font-medium">Awaiting event execution...</p>
+              </div>
+            ) : (
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
+                
+                {/* Decision Card */}
+                <div className="flex items-center justify-between p-5 rounded-xl border bg-[#0B0E14] border-[#2A3441]">
+                  <div>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Automated Action</p>
+                    <h3 className={clsx(
+                      "text-2xl font-black uppercase tracking-wider font-mono",
+                      result.action === "allow" && "text-emerald-400",
+                      result.action === "challenge" && "text-amber-400",
+                      result.action === "block" && "text-red-400"
                     )}>
-                      {result.risk_score ?? "--"}
-                    </span>
-                    <span className="text-gray-500">/ 100</span>
+                      {result.action}
+                    </h3>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Calculated Risk Score</p>
+                    <div className="flex items-baseline justify-end gap-1">
+                      <span className={clsx(
+                        "text-3xl font-black font-mono",
+                        result.risk_score < 30 && "text-emerald-400",
+                        result.risk_score >= 30 && result.risk_score < 70 && "text-amber-400",
+                        result.risk_score >= 70 && "text-red-400",
+                      )}>
+                        {result.risk_score ?? "--"}
+                      </span>
+                      <span className="text-xs text-gray-500 font-mono">/ 100</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <p className="text-blue-300 text-sm">{result.message || result.detail}</p>
-              </div>
+                {/* Response Message */}
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs text-blue-300 leading-relaxed font-medium">
+                  {result.message || result.detail}
+                </div>
 
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-[#2A3441] text-[11px] text-gray-400">
+            Events evaluated by TrustNet Isolation Forest & Real-Time Signal Evaluator.
+          </div>
         </div>
 
       </div>

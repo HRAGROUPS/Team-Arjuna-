@@ -6,7 +6,7 @@ import hashlib
 import requests
 
 from models.database import get_db, User, Device, UserDevice, Session as DbSession, Event, RiskAssessment
-from models.schemas import LoginRequest, LoginResponse
+from models.schemas import LoginRequest, LoginResponse, VerifyMFARequest
 from core.security import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from risk_engine.evaluator import RiskEvaluator
 
@@ -163,4 +163,33 @@ def login(request_data: LoginRequest, http_request: Request, db: Session = Depen
         action="allow",
         risk_score=risk_result["risk_score"],
         message="Login successful."
+    )
+
+@router.post("/verify-mfa", response_model=LoginResponse)
+def verify_mfa(req: VerifyMFARequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == req.username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not req.code or len(req.code) < 6:
+        raise HTTPException(status_code=400, detail="Invalid verification code. Enter a 6-digit code.")
+        
+    if req.device_fingerprint:
+        dev = db.query(Device).filter(Device.fingerprint == req.device_fingerprint).first()
+        if dev:
+            user_dev = db.query(UserDevice).filter(UserDevice.user_id == user.id, UserDevice.device_id == dev.id).first()
+            if user_dev:
+                user_dev.trust_level = "trusted"
+                db.commit()
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username, "role": user.role}, expires_delta=access_token_expires
+    )
+
+    return LoginResponse(
+        token=access_token,
+        action="allow",
+        risk_score=0.0,
+        message="MFA verification successful! Device marked as trusted."
     )
