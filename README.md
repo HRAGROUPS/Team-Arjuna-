@@ -58,28 +58,28 @@ Minimalist client authentication portal capturing hardware fingerprinting and ty
 
 ```mermaid
 graph TD
-    Client[📱 Web Client] -->|Login Request + Typing Biometrics + Fingerprint| Gateway[⚡ FastAPI Backend]
+    Client["📱 Web Client"] -->|"Login Request + Biometrics + Fingerprint"| Gateway["⚡ FastAPI Backend"]
     
     subgraph "TrustNet Engine"
-        Gateway --> Auth[🔐 Auth Controller]
-        Auth --> HIBP[🔍 Dark Web Breach Check (HIBP API)]
-        Auth --> Evaluator[🛡️ Risk Evaluator Engine]
+        Gateway --> Auth["🔐 Auth Controller"]
+        Auth --> HIBP["🔍 Dark Web Breach Check (HIBP API)"]
+        Auth --> Evaluator["🛡️ Risk Evaluator Engine"]
         
-        Evaluator --> FP[💻 Hardware Device Binding]
-        Evaluator --> Geo[📍 IP & Geolocation Engine]
-        Evaluator --> ML[🧠 Isolation Forest ML Model]
-        Evaluator --> Bio[⌨️ Typing Biometrics Monitor]
+        Evaluator --> FP["💻 Hardware Device Binding"]
+        Evaluator --> Geo["📍 IP & Geolocation Engine"]
+        Evaluator --> ML["🧠 Isolation Forest ML Model"]
+        Evaluator --> Bio["⌨️ Typing Biometrics Monitor"]
     end
     
-    Evaluator -->|Risk Score 0-100 + xAI Drivers| Decision{⚖️ Decision Matrix}
+    Evaluator -->|"Risk Score 0-100 + xAI Drivers"| Decision{"⚖️ Decision Matrix"}
     
-    Decision -->|< 30 Score| Allow[✅ ALLOW]
-    Decision -->|30 - 69 Score| Challenge[⚠️ CHALLENGE / MFA]
-    Decision -->|≥ 70 Score| Block[🚫 BLOCK]
+    Decision -->|"< 30 Score"| Allow["✅ ALLOW"]
+    Decision -->|"30 - 69 Score"| Challenge["⚠️ CHALLENGE / MFA"]
+    Decision -->|"≥ 70 Score"| Block["🚫 BLOCK"]
     
-    Auth --> DB[(💾 SQLite / SQLAlchemy DB)]
-    DB --> AdminUI[📊 Next.js SOC Dashboard]
-    DB --> GraphUI[🕸️ Identity Graph Component]
+    Auth --> DB[("💾 SQLite / SQLAlchemy DB")]
+    DB --> AdminUI["📊 Next.js SOC Dashboard"]
+    DB --> GraphUI["🕸️ Identity Graph Component"]
 ```
 
 ---
