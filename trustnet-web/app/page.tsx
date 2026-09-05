@@ -13,6 +13,8 @@ export default function RealLogin() {
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: string; text: string } | null>(null);
   const [fingerprint, setFingerprint] = useState<string>("");
+  const [typingStartTime, setTypingStartTime] = useState<number | null>(null);
+  const [typingDuration, setTypingDuration] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function RealLogin() {
         device_fingerprint: fingerprint,
         os,
         browser,
+        typing_duration_ms: typingDuration,
         // Notice: We are NOT sending IP or Location here anymore!
         // The backend will extract the real IP securely from the HTTP connection
         // and do a live Geolocation lookup.
@@ -112,6 +115,14 @@ export default function RealLogin() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={() => {
+                  if (!typingStartTime) setTypingStartTime(Date.now());
+                }}
+                onKeyUp={() => {
+                  if (typingStartTime) {
+                    setTypingDuration(Date.now() - typingStartTime);
+                  }
+                }}
                 className="w-full bg-[#0B0E14] border border-[var(--color-border)] rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
                 required
               />

@@ -6,11 +6,12 @@ class LoginRequest(BaseModel):
     username: str
     password: str
     device_fingerprint: str
-    os: str
-    browser: str
+    os: Optional[str] = None
+    browser: Optional[str] = None
     ip_address: Optional[str] = None
     location: Optional[str] = None
-    timestamp: Optional[str] = None # Optional ISO timestamp for simulation
+    timestamp: Optional[str] = None
+    typing_duration_ms: Optional[int] = 0 # Optional ISO timestamp for simulation
 
 class LoginResponse(BaseModel):
     token: Optional[str] = None

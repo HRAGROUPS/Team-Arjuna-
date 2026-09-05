@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from datetime import timedelta
 import json
+import hashlib
 import requests
 
 from models.database import get_db, User, Device, UserDevice, Session as DbSession, Event, RiskAssessment
@@ -44,6 +45,22 @@ def login(request_data: LoginRequest, http_request: Request, db: Session = Depen
             except:
                 location = "Unknown Location"
 
+    # REAL-WORLD UPGRADE: Dark Web Credential Check
+    # We securely hash the password and check the HaveIBeenPwned API
+    pwned_count = 0
+    try:
+        sha1_pwd = hashlib.sha1(request_data.password.encode('utf-8')).hexdigest().upper()
+        prefix = sha1_pwd[:5]
+        suffix = sha1_pwd[5:]
+        pwned_res = requests.get(f"https://api.pwnedpasswords.com/range/{prefix}", timeout=2)
+        if pwned_res.status_code == 200:
+            for line in pwned_res.text.splitlines():
+                if line.startswith(suffix):
+                    pwned_count = int(line.split(':')[1])
+                    break
+    except:
+        pass
+
     # 2. CONTINUOUS DIGITAL TRUST EVALUATION (Risk Engine)
     # MUST be called BEFORE we insert the new device/session into the database!
     evaluator = RiskEvaluator(db)
@@ -52,7 +69,9 @@ def login(request_data: LoginRequest, http_request: Request, db: Session = Depen
         device_fingerprint=request_data.device_fingerprint, 
         ip_address=ip_address, 
         location=location,
-        simulation_timestamp=request_data.timestamp
+        simulation_timestamp=request_data.timestamp,
+        typing_duration_ms=request_data.typing_duration_ms,
+        is_pwned=(pwned_count > 0)
     )
 
     # DEMO/ADMIN BYPASS: The admin account must always be able to log in to present the dashboard!
