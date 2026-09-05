@@ -7,7 +7,8 @@ import clsx from "clsx";
 import { format } from "date-fns";
 import TrustGraph from "../components/TrustGraph";
 
-const API_URL = "http://localhost:8000/api/v1/admin/alerts";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = `${BASE_URL}/api/v1/admin/alerts`;
 
 export default function AdminDashboard() {
   const [alerts, setAlerts] = useState<any[]>([]);

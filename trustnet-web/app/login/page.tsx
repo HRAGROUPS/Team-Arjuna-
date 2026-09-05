@@ -46,7 +46,10 @@ export default function RealLogin() {
         // and do a live Geolocation lookup.
       };
 
-      const res = await axios.post("http://localhost:8000/api/v1/auth/login", payload);
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await axios.post(`${BASE_URL}/api/v1/auth/login`, payload, {
+        headers: { "Bypass-Tunnel-Reminder": "true" }
+      });
       const data = res.data;
 
       if (data.action === "allow") {

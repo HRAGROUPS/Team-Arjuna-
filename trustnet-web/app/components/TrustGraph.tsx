@@ -7,7 +7,8 @@ import dynamic from "next/dynamic";
 // Force graph needs to be loaded dynamically without SSR
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
-const API_URL = "http://localhost:8000/api/v1/graph/alice";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = `${BASE_URL}/api/v1/graph/alice`;
 
 export default function TrustGraph() {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });

@@ -5,7 +5,8 @@ import { Shield, Smartphone, Globe, Clock, AlertTriangle, CheckCircle, ShieldAle
 import axios from "axios";
 import clsx from "clsx";
 
-const API_URL = "http://localhost:8000/api/v1/auth/login";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = `${BASE_URL}/api/v1/auth/login`;
 
 type Scenario = "baseline" | "anomaly" | "attack";
 
