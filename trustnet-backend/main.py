@@ -3,8 +3,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from api import auth, admin, graph
 from models.database import engine, Base
 
+from data.seed import seed_database
+from models.database import SessionLocal
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Auto-seed if empty (critical for Render's ephemeral filesystem)
+db = SessionLocal()
+from models.database import User
+if db.query(User).count() == 0:
+    seed_database()
+db.close()
 
 app = FastAPI(
     title="TrustNet API",
